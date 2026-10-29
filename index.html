@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Pages Should a Content Team Review First? A Transparent Baseline for Refresh Prioritisation</title>
+<meta name="description" content="A rule-based baseline for ranking already-published pages for review, tested on 30,000 anonymised pages from 32 clients.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --ink: #14212b;
+    --muted: #55626d;
+    --rule: #d3dbe2;
+    --accent: #0c6b6b;
+    --accent-soft: #e2f1f0;
+    --warn-soft: #fbf0dc;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1318;
+      --surface: #141c23;
+      --ink: #e6ebef;
+      --muted: #9aa8b3;
+      --rule: #2b3843;
+      --accent: #5fc4c4;
+      --accent-soft: #14282b;
+      --warn-soft: #2b2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1318;
+    --surface: #141c23;
+    --ink: #e6ebef;
+    --muted: #9aa8b3;
+    --rule: #2b3843;
+    --accent: #5fc4c4;
+    --accent-soft: #14282b;
+    --warn-soft: #2b2415;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.125rem;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  .page { max-width: 44rem; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+
+  header.title-block { padding-bottom: 1.5rem; border-bottom: 2px solid var(--ink); margin-bottom: 2rem; }
+  h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.15; margin: 0 0 1rem; font-weight: 700; letter-spacing: -0.01em; }
+  .byline { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); margin: 0; }
+  .byline a { color: var(--accent); }
+
+  h2 { font-size: 1.5rem; line-height: 1.25; margin: 3rem 0 0.75rem; font-weight: 700; }
+  h3 { font-size: 1.1rem; margin: 1.75rem 0 0.4rem; font-weight: 600; }
+  p { margin: 0 0 1rem; }
+  ul { padding-left: 1.25rem; margin: 0 0 1rem; }
+  li { margin-bottom: 0.4rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.88em; background: var(--accent-soft); padding: 0.1em 0.35em; border-radius: 3px; }
+
+  .abstract { background: var(--accent-soft); border-left: 4px solid var(--accent); padding: 1.1rem 1.25rem; margin: 0 0 1rem; border-radius: 0 6px 6px 0; }
+  .abstract h2 { margin-top: 0; font-size: 1.15rem; }
+  .abstract p:last-child { margin-bottom: 0; }
+
+  .callout { background: var(--warn-soft); padding: 0.9rem 1.1rem; border-radius: 6px; font-size: 1rem; margin: 1.25rem 0; }
+
+  .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 0.9rem; line-height: 1.45; }
+  caption { text-align: left; padding: 0.7rem 0.9rem 0.3rem; font-weight: 600; color: var(--muted); caption-side: top; }
+  th, td { text-align: left; padding: 0.55rem 0.9rem; border-top: 1px solid var(--rule); vertical-align: top; }
+  thead th { border-top: 0; border-bottom: 2px solid var(--rule); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.ref td { color: var(--muted); }
+
+  figure { margin: 1.5rem 0 2rem; }
+  figure img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 6px; background: #fff; }
+  figcaption { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.5; }
+
+  .verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.9rem; margin: 1rem 0 1.5rem; }
+  .verdict { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-family: var(--sans); font-size: 0.95rem; }
+  .verdict strong { display: block; font-size: 1.15rem; margin-bottom: 0.15rem; }
+
+  footer { margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-family: var(--sans); font-size: 0.95rem; color: var(--muted); }
+
+  @media (max-width: 480px) {
+    body { font-size: 1.05rem; }
+    .page { padding-top: 2rem; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="title-block">
+  <h1>Which Pages Should a Content Team Review First? A Transparent Baseline for Refresh Prioritisation</h1>
+  <p class="byline">Ish Kaklotar &middot; FlyRank ML Internship capstone &middot; Applied Search Intelligence track, Lane 2 (Refresh / Content Opportunity Scoring)</p>
+</header>
+
+<section class="abstract" aria-labelledby="abstract">
+  <h2 id="abstract">Abstract</h2>
+  <p>
+    A content team can usually review only 20 to 50 pages per cycle, so the question is which already-published pages with real search demand should come first.
+    I built one transparent rule, the “stale visible page” (no update for 180 days or more and at least 500 impressions in 90 days), and turned it into a score with a reason code and an action label for 30,000 anonymised pages from 32 clients.
+    Against a proxy outcome (the page’s trend bucket is “down”), the top 20 pages were “down” 90% of the time against 54% for random order, but the advantage faded to 76% at the top 50 and 59% at the top 100.
+    Two checks of the rule’s assumptions, staleness and volume, both came back MIXED, and only 17 pages meet the rule.
+    I trained no model, the outcome is a proxy and the data is observational, so the results are directional decision-support, not proof that any edit would help.
+  </p>
+</section>
+
+<h2 id="introduction">1. Introduction and problem statement</h2>
+<p>
+  Search teams hold far more published pages than they can reread. Someone has to decide which pages to open first, and that decision is usually made with hand-written rules and thresholds. This project asks a plain question: can a small, explainable rule built only from observable signals put the more promising pages at the top of a review queue, and is it any better than picking pages at random?
+</p>
+<p>
+  The decision this work supports is: <em>which pages should a reviewer look at first, and what should they do about each one</em> (refresh the content, rewrite the title and meta description, or keep monitoring). A high rank means “review this first”. It does not mean “this page will recover if edited”.
+</p>
+<p>
+  The rule is a baseline. It is deliberately simple so that a later model, if one is built, has an honest reference to beat.
+</p>
+
+<h2 id="data">2. Data</h2>
+<p>
+  I used the small anonymised starter dataset of the FlyRank ML Internship (<code>data/raw/content_refresh_anonymized.csv</code>). I did not use the larger warehouse release for this paper.
+</p>
+<ul>
+  <li><strong>Unit of analysis:</strong> one row is one content page (<code>content_id</code>) within a client, measured over a 90-day window.</li>
+  <li><strong>Size:</strong> 30,000 pages from 32 clients. All 30,000 pass the starter eligibility rule (<code>impressions_90d &gt; 0</code> and <code>content_age_days &ge; 90</code>), with one row per page.</li>
+  <li><strong>Signals used by the score:</strong> <code>impressions_90d</code> (visibility) and <code>days_since_last_update</code> (staleness).</li>
+  <li><strong>Signals used only for review notes:</strong> average position and 90-day sessions.</li>
+  <li><strong>Proxy outcome, used only to evaluate:</strong> <code>trend_direction</code> equal to “down”.</li>
+</ul>
+<p>What I excluded, and why:</p>
+<ul>
+  <li>Product decision flags and combined scores. They are not part of this dataset, and I never rebuilt them as inputs, because feeding a model the product’s own answer produces a circular result.</li>
+  <li>Any future-window column. The score uses none.</li>
+  <li>The sparse AI-session fields. There are too few positive examples to support any claim.</li>
+  <li>Client names, domains, URLs, raw queries and page text. None are in the data, and none appear here. Pages are shown only by pseudonymised IDs.</li>
+</ul>
+
+<h2 id="methodology">3. Methodology</h2>
+<h3>Assumptions</h3>
+<p>
+  The rule rests on two assumptions that I test rather than take for granted: (1) a page that has not been updated for a long time is more likely to be losing visibility, and (2) pages with more impressions have more at stake and less noisy trends.
+</p>
+<h3>The baseline rule</h3>
+<p>
+  A page is a <code>stale_visible_page</code> when <code>days_since_last_update</code> is at least 180 <strong>and</strong> <code>impressions_90d</code> is at least 500. Flagged pages get the reason code <code>stale_visible_page</code> and the action <code>REFRESH_REVIEW</code>. All other pages get <code>no_flag</code> and <code>MONITOR</code>.
+</p>
+<h3>The score and the queue</h3>
+<p>
+  Score = 100 &times; (0.5 &times; percentile of impressions + 0.5 &times; percentile of days since last update). The queue lists flagged pages first, then everything else, and each group is sorted by score. Ranks 1 to 17 are therefore the flagged pages. From rank 18 on, order comes from the score alone.
+</p>
+<h3>Label and validation design</h3>
+<p>
+  The proxy outcome is a bucket computed from the current window, not a future result, so every number below is directional. I trained no model, so there is no train and test split. Instead I evaluate the fixed rule in two ways: (a) the share of “down” pages among the top K ranked pages compared with the share across all pages, which is what random order would give, and (b) two bucket tables, one per signal, with the number of pages in each bucket. Each signal gets a one-word verdict. CONFIRMED means the “down” share rises as the signal rises, OPPOSITE means it falls, MIXED means it goes up and down, and FALSE means it is flat. Buckets with fewer than 30 pages are ignored for the verdict.
+</p>
+<h3>Leakage checks</h3>
+<p>
+  The score uses only two observable columns. The code checks the score’s input list against a list of forbidden names (labels, product scores, future-window fields) and stops if one appears. The outcome column is created after the score is built and is used only to evaluate it.
+</p>
+
+<h2 id="results">4. Results</h2>
+<h3>The baseline ranking against random order</h3>
+<p>
+  Across all 30,000 pages, 54.2% have a “down” trend. That is what random order would return at any K.
+</p>
+<div class="table-wrap">
+  <table>
+    <caption>Share of “down” pages in the top K of the queue (proxy outcome)</caption>
+    <thead>
+      <tr><th>Ranking</th><th class="num">Top 20</th><th class="num">Top 50</th><th class="num">Top 100</th></tr>
+    </thead>
+    <tbody>
+      <tr class="ref"><td>Random order (reference)</td><td class="num">0.542</td><td class="num">0.542</td><td class="num">0.542</td></tr>
+      <tr><td>Baseline rule</td><td class="num">0.90 (18 of 20)</td><td class="num">0.76 (38 of 50)</td><td class="num">0.59 (59 of 100)</td></tr>
+      <tr><td>Lift over random</td><td class="num">1.66&times;</td><td class="num">1.40&times;</td><td class="num">1.09&times;</td></tr>
+    </tbody>
+  </table>
+</div>
+<figure>
+  <img src="assets/baseline_vs_random.png" alt="Bar chart of the share of down-trending pages in the top 20, top 50 and top 100 of the baseline ranking, with a dashed line at 0.54 for random order. The bars fall from about 0.90 to 0.76 to 0.59." width="900" height="560">
+  <figcaption>The baseline’s advantage over random order is largest at the very top and almost disappears by the top 100.</figcaption>
+</figure>
+<p>
+  The rule flags only <strong>17 pages</strong>. Among them 94.1% trend “down”, against 54.2% among the 29,983 unflagged pages. The top of the queue is strong because it is made of those 17 pages. After rank 17, the queue is ordered by score alone, and the lift fades quickly.
+</p>
+
+<h3>Do the rule’s two assumptions hold?</h3>
+<div class="verdicts">
+  <div class="verdict"><strong>Staleness: MIXED</strong>The “down” share does not rise steadily as pages get older.</div>
+  <div class="verdict"><strong>Volume: MIXED</strong>Pages under 100 impressions are rarely “down”, but the share does not keep rising above that.</div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <caption>Staleness: days since last update against the share of “down” pages</caption>
+    <thead><tr><th>Days since last update</th><th class="num">Pages (n)</th><th class="num">Share down</th></tr></thead>
+    <tbody>
+      <tr><td>0 to 89</td><td class="num">20,655</td><td class="num">0.512</td></tr>
+      <tr><td>90 to 179</td><td class="num">9,171</td><td class="num">0.611</td></tr>
+      <tr><td>180 to 364</td><td class="num">169</td><td class="num">0.467</td></tr>
+      <tr><td>365 or more</td><td class="num">5</td><td class="num">0.600 (too few pages to judge)</td></tr>
+    </tbody>
+  </table>
+</div>
+<figure>
+  <img src="assets/signal_staleness.png" alt="Bar chart of the share of down-trending pages by days since last update. Pages 90 to 179 days old are highest at about 0.61 and pages 180 to 364 days old are lower at about 0.47, with a dashed line at 0.54 for all pages." width="900" height="560">
+  <figcaption>The staleness assumption is not clearly supported in this slice. Almost every page (29,826 of 30,000) was updated within the last 180 days.</figcaption>
+</figure>
+
+<div class="table-wrap">
+  <table>
+    <caption>Volume: impressions in 90 days against the share of “down” pages</caption>
+    <thead><tr><th>Impressions (90 days)</th><th class="num">Pages (n)</th><th class="num">Share down</th></tr></thead>
+    <tbody>
+      <tr><td>Under 100</td><td class="num">7,994</td><td class="num">0.389</td></tr>
+      <tr><td>100 to 499</td><td class="num">5,280</td><td class="num">0.604</td></tr>
+      <tr><td>500 to 1,999</td><td class="num">6,511</td><td class="num">0.618</td></tr>
+      <tr><td>2,000 or more</td><td class="num">10,215</td><td class="num">0.581</td></tr>
+    </tbody>
+  </table>
+</div>
+<figure>
+  <img src="assets/signal_volume.png" alt="Bar chart of the share of down-trending pages by impressions bucket. Pages under 100 impressions are lowest at about 0.39, the three higher buckets sit between about 0.58 and 0.62, with a dashed line at 0.54 for all pages." width="900" height="560">
+  <figcaption>Volume is the more useful signal here, mainly because very low-volume pages behave differently. The small dip in the top bucket is why the verdict is MIXED rather than CONFIRMED.</figcaption>
+</figure>
+
+<h3>What I take from this</h3>
+<ul>
+  <li>The rule’s top picks were “down” more often than random order, so the rule is a usable first filter. Its value is concentrated in a very small group.</li>
+  <li>The staleness half of the rule is the weak part. Because so few pages are older than 180 days, the 180-day cut-off touches almost nothing, and the older buckets do not show a higher “down” share.</li>
+  <li>A clearly explained negative result is still a result. It tells the next step what to change: test other thresholds for staleness, and consider position and engagement signals.</li>
+</ul>
+
+<h2 id="limitations">5. Limitations and honest framing</h2>
+<ul>
+  <li><strong>The outcome is a proxy.</strong> <code>trend_direction</code> is a bucket from the current window, not a future outcome. A “down” page can also reflect seasonality, consolidation into a sibling page, or noise rather than a lasting decline.</li>
+  <li><strong>No model was trained.</strong> I cannot say whether a learned ranking would beat this baseline. The numbers here are a reference point only.</li>
+  <li><strong>Very few pages are flagged.</strong> Only 17 of 30,000 pages meet the rule, so the top-20 and top-50 figures rest on small groups and are uncertain.</li>
+  <li><strong>The data is observational.</strong> I ran no experiment, so I make no claim that refreshing a page causes recovery, and I make no claim about how any search engine works.</li>
+  <li><strong>Thresholds are policy choices.</strong> The 180-day and 500-impression cut-offs are mine. Different cut-offs would produce a different queue.</li>
+  <li><strong>Small, anonymised slice.</strong> The findings come from 30,000 pages and 32 clients. They need to be re-tested before being applied elsewhere.</li>
+</ul>
+
+<h2 id="recommendations">6. Ranked recommendations</h2>
+<p>
+  These are the top 10 pages of the baseline queue, shown by pseudonymised ID. The last column uses only observable signals (position and sessions), never the outcome. All ten carry the reason code <code>stale_visible_page</code> and the action <code>REFRESH_REVIEW</code>.
+</p>
+<div class="table-wrap">
+  <table>
+    <caption>Top 10 review queue</caption>
+    <thead>
+      <tr><th class="num">Rank</th><th>Page ID</th><th class="num">Impressions (90 days)</th><th class="num">Days since update</th><th>What would make this pick wrong</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="num">1</td><td><code>content_cf56e2e2e282</code></td><td class="num">61,678</td><td class="num">194</td><td>Topic may be evergreen or seasonal; check whether a sibling page absorbed the demand.</td></tr>
+      <tr><td class="num">2</td><td><code>content_7368877ea310</code></td><td class="num">59,472</td><td class="num">194</td><td>Ranks beyond page two, so age may not be the real problem (relevance or intent).</td></tr>
+      <tr><td class="num">3</td><td><code>content_1bfaa38ff26c</code></td><td class="num">25,715</td><td class="num">194</td><td>Ranks beyond page two, so age may not be the real problem (relevance or intent).</td></tr>
+      <tr><td class="num">4</td><td><code>content_0a91db491d14</code></td><td class="num">13,299</td><td class="num">193</td><td>Topic may be evergreen or seasonal; check whether a sibling page absorbed the demand.</td></tr>
+      <tr><td class="num">5</td><td><code>content_5feee3994adb</code></td><td class="num">7,812</td><td class="num">194</td><td>Ranks beyond page two, so age may not be the real problem (relevance or intent).</td></tr>
+      <tr><td class="num">6</td><td><code>content_c2d929d83eaa</code></td><td class="num">7,558</td><td class="num">193</td><td>Topic may be evergreen or seasonal; check whether a sibling page absorbed the demand.</td></tr>
+      <tr><td class="num">7</td><td><code>content_b16bd7307b39</code></td><td class="num">4,590</td><td class="num">194</td><td>Ranks beyond page two, so age may not be the real problem (relevance or intent).</td></tr>
+      <tr><td class="num">8</td><td><code>content_fe16a55cd13d</code></td><td class="num">4,556</td><td class="num">194</td><td>Topic may be evergreen or seasonal; check whether a sibling page absorbed the demand.</td></tr>
+      <tr><td class="num">9</td><td><code>content_ecb6215e79fd</code></td><td class="num">4,429</td><td class="num">194</td><td>Ranks beyond page two, so age may not be the real problem (relevance or intent).</td></tr>
+      <tr><td class="num">10</td><td><code>content_928af3e22c80</code></td><td class="num">1,697</td><td class="num">193</td><td>Very few sessions, so the engagement evidence is thin.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Action playbook</h3>
+<ul>
+  <li><strong><code>stale_visible_page</code> leads to <code>REFRESH_REVIEW</code>.</strong> Open the page and check position first. Five of the top ten rank beyond page two, where age may not be the real problem, and a refresh is less likely to be the right action. If the content is outdated and the page sits within reach of page one, decide between a content refresh, a title and meta rewrite, or monitoring.</li>
+  <li><strong>Check for look-alikes before editing.</strong> A drop can come from seasonality, a sibling page absorbing the demand, or noise.</li>
+  <li><strong><code>no_flag</code> leads to <code>MONITOR</code>.</strong> No action now.</li>
+</ul>
+<div class="callout">
+  All ten top pages were last updated 193 or 194 days ago, just past the 180-day cut-off. Within this group, staleness does not separate one page from another, and the order is driven by impressions. A reviewer should treat the order as a starting point, not a verdict.
+</div>
+
+<h2 id="reproducibility">7. Reproducibility</h2>
+<p>
+  The full work is in the public repository: <a href="https://github.com/ishkaklotar03/ML-Internship">github.com/ishkaklotar03/ML-Internship</a>. The notebooks are in <a href="https://github.com/ishkaklotar03/ML-Internship/tree/main/work/notebooks"><code>work/notebooks/</code></a>. They cover the research question, the ML task framing, the data contract, the baseline score and this capstone (<code>capstone.ipynb</code>).
+</p>
+<p>
+  To reproduce the results, open <code>capstone.ipynb</code> in Google Colab and choose Runtime, then Run all. The notebook loads the starter file from the repository, rebuilds the score and the queue, recomputes every table above and regenerates the three charts.
+</p>
+
+<h2 id="acknowledgements">8. Acknowledgements and data credit</h2>
+<p>
+  Built on the FlyRank ML Internship dataset, provided by <a href="https://flyrank.ai">FlyRank</a>. Thank you to the programme mentors for the guidance and the weekly sessions.
+</p>
+
+<footer>
+  <p>This paper uses observed, directional language on purpose. It reports an association with a proxy outcome and supports a human reviewer’s decision. It makes no claim about causes or about how any search engine works.</p>
+</footer>
+
+</main>
+</body>
+</html>
